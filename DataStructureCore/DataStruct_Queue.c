@@ -47,166 +47,100 @@
 /*----------------------------------------------------------------------------------------
  Function Implementation
  ----------------------------------------------------------------------------------------*/
-#pragma mark - Array List Queue
-ArrayQueue* DS_Queue_Array_Create(IN const unsigned int nMaxQueueSize)
+#pragma mark - Queue
+void* DS_Queue_Create(IN const int nMaxQueueSize)
 {
-    ArrayQueue          *pQueue = NULL;
+    Queue               *pQueue = NULL;
+    const ListType      nListType = (-1 == nMaxQueueSize) ? LIST_TYPE_DOUBLE : LIST_TYPE_ARRAY;
     
-    SAFEALLOC(pQueue, 1, 32, ArrayQueue);
+    SAFEALLOC(pQueue, 1, 32, Queue);
     if(NULL == pQueue)
         return NULL;
     
-    pQueue->pList = DS_List_Array_Create(nMaxQueueSize);
+    pQueue->pList = DS_List_Create(nMaxQueueSize, nListType);
     if(NULL == pQueue->pList)
         return NULL;
     
-    return pQueue;
+    return (void *)pQueue;
 }
 
 
-int DS_Queue_Array_Destroy(IN OUT ArrayQueue **ppQueue)
+int DS_Queue_Destroy(IN OUT void **ppQueueHndl)
 {
+    Queue               **ppQueue = (Queue **)ppQueueHndl;
+    
     if(NULL == (*ppQueue))
         return SUCCESS;
     
-    DS_List_Array_Destroy(&((*ppQueue)->pList));
+    DS_List_Destroy((void **)(&((*ppQueue)->pList)));
     SAFEFREE((*ppQueue));
     
     return SUCCESS;
 }
 
 
-int DS_Queue_Array_Push(IN OUT ArrayQueue *pQueue, IN const int nData)
+int DS_Queue_Push(IN OUT void *pQueueHndl, IN const int nData)
 {
-    if(1 == DS_List_Array_IsFull((const ArrayList *)(pQueue->pList)))
+    Queue               *pQueue = (Queue *)pQueueHndl;
+    
+    if(1 == DS_List_IsFull((const List *)(pQueue->pList)))
         return FAIL;
     
-    if(FAIL == DS_List_Array_Insert(pQueue->pList, nData, LIST_DIR_TAIL, NULL))
+    if(FAIL == DS_List_Insert(pQueue->pList, nData, LIST_DIR_TAIL, NULL))
         return FAIL;
     
     return SUCCESS;
 }
 
 
-int DS_Queue_Array_Pop(IN OUT ArrayQueue *pQueue, OUT int *pData)
+int DS_Queue_Priority_Push(IN OUT Queue *pQueueHndl, IN const int nData, IN const fpCompData CompData)
 {
-    if(1 == DS_List_Array_IsEmpty((const ArrayList *)(pQueue->pList)))
+    Queue               *pQueue = (Queue *)pQueueHndl;
+    
+    if(1 == DS_List_IsFull((const void *)(pQueue->pList)))
         return FAIL;
     
-    if(FAIL == DS_List_Array_DeleteFromDir(pQueue->pList, LIST_DIR_HEAD, pData))
+    if(FAIL == DS_List_Insert(pQueue->pList, nData, LIST_DIR_INVALID, CompData))
         return FAIL;
     
     return SUCCESS;
 }
 
 
-int DS_Queue_Array_Peek(IN const ArrayQueue *pQueue, OUT int *pData)
+int DS_Queue_Pop(IN OUT void *pQueueHndl, OUT int *pData)
 {
-    if(1 == DS_List_Array_IsEmpty((const ArrayList *)(pQueue->pList)))
+    Queue               *pQueue = (Queue *)pQueueHndl;
+    
+    if(1 == DS_List_IsEmpty((const List *)(pQueue->pList)))
         return FAIL;
     
-    if(FAIL == DS_List_Array_PeekFromDir(pQueue->pList, LIST_DIR_HEAD, pData))
-        return FAIL;
-    
-    return SUCCESS;
-}
-
-
-#pragma mark - Node List Priority Queue
-int DS_Queue_Priority_Array_Push(IN OUT ArrayQueue *pQueue, IN const int nData, IN const fpCompData CompData)
-{
-    if(1 == DS_List_Array_IsFull((const ArrayList *)(pQueue->pList)))
-        return FAIL;
-    
-    if(FAIL == DS_List_Array_Insert(pQueue->pList, nData, LIST_DIR_INVALID, CompData))
+    if(FAIL == DS_List_DeleteFromDir(pQueue->pList, LIST_DIR_HEAD, pData))
         return FAIL;
     
     return SUCCESS;
 }
 
 
-
-#pragma mark - Node List Queue
-NodeQueue* DS_Queue_Node_Create(void)
+int DS_Queue_Peek(IN const void *pQueueHndl, OUT int *pData)
 {
-    NodeQueue          *pQueue = NULL;
+    Queue               *pQueue = (Queue *)pQueueHndl;
     
-    SAFEALLOC(pQueue, 1, 32, NodeQueue);
-    if(NULL == pQueue)
-        return NULL;
+    if(1 == DS_List_IsEmpty((const List *)(pQueue->pList)))
+        return FAIL;
     
-    pQueue->pList = DS_List_NodeD_Create();
-    if(NULL == pQueue->pList)
-        return NULL;
-    
-    return pQueue;
-}
-
-
-int DS_Queue_Node_Destroy(IN OUT NodeQueue **ppQueue)
-{
-    if(NULL == (*ppQueue))
-        return SUCCESS;
-    
-    DS_List_NodeD_Destroy(&((*ppQueue)->pList));
-    SAFEFREE((*ppQueue));
-    
-    return SUCCESS;
-}
-
-
-int DS_Queue_Node_Push(IN OUT NodeQueue *pQueue, IN const int nData)
-{
-    if(FAIL == DS_List_NodeD_Insert(pQueue->pList, nData, LIST_DIR_TAIL, NULL))
+    if(FAIL == DS_List_PeekFromDir(pQueue->pList, LIST_DIR_HEAD, pData))
         return FAIL;
     
     return SUCCESS;
 }
 
 
-int DS_Queue_Node_Pop(IN OUT NodeQueue *pQueue, OUT int *pData)
+void DS_Queue_ShowData(IN const void *pQueueHndl)
 {
-    if(1 == DS_List_Node_IsEmpty((const NodeList *)(pQueue->pList)))
-        return FAIL;
+    Queue               *pQueue = (Queue *)pQueueHndl;
     
-    if(FAIL == DS_List_NodeD_DeleteFromDir(pQueue->pList, LIST_DIR_HEAD, pData))
-        return FAIL;
-    
-    return SUCCESS;
-}
-
-
-int DS_Queue_Node_Peek(IN const NodeQueue *pQueue, OUT int *pData)
-{
-    if(1 == DS_List_Node_IsEmpty((const NodeList *)(pQueue->pList)))
-        return FAIL;
-    
-    if(FAIL == DS_List_NodeD_PeekFromDir(pQueue->pList, LIST_DIR_HEAD, pData))
-        return FAIL;
-    
-    return SUCCESS;
+    DS_List_ShowData(pQueue->pList);
 }
 
 
 
-#pragma mark - Node List Priority Queue
-int DS_Queue_Priority_Node_Push(IN OUT NodeQueue *pQueue, IN const int nData, IN const fpCompData CompData)
-{
-    if(FAIL == DS_List_NodeD_Insert(pQueue->pList, nData, LIST_DIR_INVALID, CompData))
-        return FAIL;
-    
-    return SUCCESS;
-}
-
-
-#pragma mark - Queue Common
-void DS_Queue_Array_Show(IN const ArrayQueue *pQueue)
-{
-    DS_List_Array_Show(pQueue->pList);
-}
-
-
-void DS_Queue_Node_Show(IN const NodeQueue *pQueue)
-{
-    DS_List_Node_Show(pQueue->pList);
-}

@@ -46,143 +46,83 @@
 /*----------------------------------------------------------------------------------------
  Function Implementation
  ----------------------------------------------------------------------------------------*/
-#pragma mark - Array List Stack
-ArrayStack* DS_Stack_Array_Create(IN const unsigned int nMaxStackSize)
+#pragma mark - Stack
+void* DS_Stack_Create(IN const int nMaxStackSize)
 {
-    ArrayStack          *pStack = NULL;
+    Stack               *pStack = NULL;
+    const ListType      nListType = (-1 == nMaxStackSize) ? LIST_TYPE_DOUBLE : LIST_TYPE_ARRAY;
     
-    SAFEALLOC(pStack, 1, 32, ArrayStack);
+    SAFEALLOC(pStack, 1, 32, Stack);
     if(NULL == pStack)
         return NULL;
     
-    pStack->pList = DS_List_Array_Create(nMaxStackSize);
+    pStack->pList = DS_List_Create(nMaxStackSize, nListType);
     if(NULL == pStack->pList)
         return NULL;
     
-    return pStack;
+    return (void *)pStack;
 }
 
 
-int DS_Stack_Array_Destroy(IN OUT ArrayStack **ppStack)
+int DS_Stack_Destroy(IN OUT void **ppStackHndl)
 {
+    Stack               **ppStack = (Stack **)ppStackHndl;
+    
     if(NULL == (*ppStack))
         return SUCCESS;
     
-    DS_List_Array_Destroy(&((*ppStack)->pList));
+    DS_List_Destroy((void **)(&((*ppStack)->pList)));
     SAFEFREE((*ppStack));
     
     return SUCCESS;
 }
 
 
-int DS_Stack_Array_Push(IN OUT ArrayStack *pStack, IN const int nData)
+int DS_Stack_Push(IN OUT void *pStackHndl, IN const int nData)
 {
-    if(1 == DS_List_Array_IsFull((const ArrayList *)(pStack->pList)))
+    Stack               *pStack = (Stack *)pStackHndl;
+    
+    if(1 == DS_List_IsFull((const List *)(pStack->pList)))
         return FAIL;
     
-    if(FAIL == DS_List_Array_Insert(pStack->pList, nData, LIST_DIR_TAIL, NULL))
+    if(FAIL == DS_List_Insert(pStack->pList, nData, LIST_DIR_TAIL, NULL))
         return FAIL;
     
     return SUCCESS;
 }
 
 
-int DS_Stack_Array_Pop(IN OUT ArrayStack *pStack, OUT int *pData)
+int DS_Stack_Pop(IN OUT void *pStackHndl, OUT int *pData)
 {
-    if(1 == DS_List_Array_IsEmpty((const ArrayList *)(pStack->pList)))
-        return FAIL;
-
-    if(FAIL == DS_List_Array_DeleteFromDir(pStack->pList, LIST_DIR_TAIL, pData))
+    Stack               *pStack = (Stack *)pStackHndl;
+    
+    if(1 == DS_List_IsEmpty((const List *)(pStack->pList)))
         return FAIL;
     
-    return SUCCESS;
-}
-
-
-int DS_Stack_Array_Peek(IN const ArrayStack *pStack, OUT int *pData)
-{
-    if(1 == DS_List_Array_IsEmpty((const ArrayList *)(pStack->pList)))
-        return FAIL;
-
-    if(FAIL == DS_List_Array_PeekFromDir(pStack->pList, LIST_DIR_TAIL, pData))
+    if(FAIL == DS_List_DeleteFromDir(pStack->pList, LIST_DIR_TAIL, pData))
         return FAIL;
     
     return SUCCESS;
 }
 
 
-
-#pragma mark - Node List Stack
-NodeStack* DS_Stack_Node_Create(void)
+int DS_Stack_Peek(IN const void *pStackHndl, OUT int *pData)
 {
-    NodeStack          *pStack = NULL;
+    Stack               *pStack = (Stack *)pStackHndl;
     
-    SAFEALLOC(pStack, 1, 32, NodeStack);
-    if(NULL == pStack)
-        return NULL;
+    if(1 == DS_List_IsEmpty((const List *)(pStack->pList)))
+        return FAIL;
     
-    pStack->pList = DS_List_NodeD_Create();
-    if(NULL == pStack->pList)
-        return NULL;
-    
-    return pStack;
-}
-
-
-int DS_Stack_Node_Destroy(IN OUT NodeStack **ppStack)
-{
-    if(NULL == (*ppStack))
-        return SUCCESS;
-    
-    DS_List_NodeD_Destroy(&((*ppStack)->pList));
-    SAFEFREE((*ppStack));
-    
-    return SUCCESS;
-}
-
-
-int DS_Stack_Node_Push(IN OUT NodeStack *pStack, IN const int nData)
-{
-    if(FAIL == DS_List_NodeD_Insert(pStack->pList, nData, LIST_DIR_TAIL, NULL))
+    if(FAIL == DS_List_PeekFromDir(pStack->pList, LIST_DIR_TAIL, pData))
         return FAIL;
     
     return SUCCESS;
 }
 
 
-int DS_Stack_Node_Pop(IN OUT NodeStack *pStack, OUT int *pData)
+void DS_Stack_ShowData(IN const void *pStackHndl)
 {
-    if(1 == DS_List_Node_IsEmpty((const NodeList *)(pStack->pList)))
-        return FAIL;
+    Stack               *pStack = (Stack *)pStackHndl;
     
-    if(FAIL == DS_List_NodeD_DeleteFromDir(pStack->pList, LIST_DIR_TAIL, pData))
-        return FAIL;
-    
-    return SUCCESS;
-}
-
-
-int DS_Stack_Node_Peek(IN const NodeStack *pStack, OUT int *pData)
-{
-    if(1 == DS_List_Node_IsEmpty((const NodeList *)(pStack->pList)))
-        return FAIL;
-
-    if(FAIL == DS_List_NodeD_PeekFromDir(pStack->pList, LIST_DIR_TAIL, pData))
-        return FAIL;
-    
-    return SUCCESS;
-}
-
-
-
-#pragma mark - Stack Common
-void DS_Stack_Array_Show(IN const ArrayStack *pStack)
-{
-    DS_List_Array_Show(pStack->pList);
-}
-
-
-void DS_Stack_Node_Show(IN const NodeStack *pStack)
-{
-    DS_List_Node_Show(pStack->pList);
+    DS_List_ShowData(pStack->pList);
 }

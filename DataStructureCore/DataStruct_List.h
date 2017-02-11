@@ -14,12 +14,13 @@
 
 typedef int (*fpCompData)(const int nSrcData0, const int nSrcData1);
 
-typedef enum _NodeType
+typedef enum _ListType
 {
-    LIST_NODE_TYPE_SINGLE            = 0,
-    LIST_NODE_TYPE_DOUBLE,
-    LIST_NODE_TYPE_INVALIDE,
-}NodeType;
+    LIST_TYPE_SINGLE            = 0,
+    LIST_TYPE_DOUBLE,
+    LIST_TYPE_ARRAY,
+    LIST_TYPE_INVALIDE,
+}ListType;
 
 
 typedef enum _ListDirection
@@ -35,7 +36,6 @@ typedef struct _ArrayList
     int                 *pData;
     int                 nCurrNumofData;
     int                 nMaxNumofData;
-    int                 nHeadIdx;
     int                 nTailIdx;
 }ArrayList;
 
@@ -49,47 +49,32 @@ typedef struct _NodeList
 }NodeList;
 
 
+typedef union _ListCore
+{
+    // For Node Based List
+    NodeList            pNList;
+
+    // For Array Based List
+    ArrayList           pAList;
+}ListCore;
+
+
 typedef struct _List
 {
-    NodeList            *pNList;
-    ArrayList           *pAList;
-    NodeType            nNodeType;
+    void                *pListCore;
+    ListType            nListType;
 }List;
 
 
-#pragma mark - Array List
-ArrayList* DS_List_Array_Create(IN const unsigned int nMaxNumofData);
-int DS_List_Array_Destroy(IN OUT ArrayList **ppList);
-int DS_List_Array_IsFull(IN const ArrayList *pList);
-int DS_List_Array_IsEmpty(IN const ArrayList *pList);
-int DS_List_Array_Insert(IN OUT ArrayList *pList, IN const int nData, IN const ListDirection nDir, IN const fpCompData CompData);
-int DS_List_Array_Delete(IN OUT ArrayList *pList, IN const int nData);
-int DS_List_Array_DeleteFromDir(IN OUT ArrayList *pList, IN const ListDirection nDir, OUT int *pOutData);
-int DS_List_Array_PeekFromDir(IN const ArrayList *pList, IN const ListDirection nDir, OUT int *pOutData);
-
-
-#pragma mark - Node Single List
-NodeList* DS_List_NodeS_Create(void);
-int DS_List_NodeS_Destroy(IN OUT NodeList **ppList);
-int DS_List_NodeS_Insert(IN OUT NodeList *pList, IN const int nData, IN const ListDirection nDir, IN const fpCompData CompData);
-int DS_List_NodeS_Delete(IN OUT NodeList *pList, IN const int nData);
-int DS_List_NodeS_DeleteFromDir(IN OUT NodeList *pList, IN const ListDirection nDir, OUT int *pOutData);
-int DS_List_NodeS_PeekFromDir(IN const NodeList *pList, IN const ListDirection nDir, OUT int *pOutData);
-
-
-#pragma mark - Node Double List
-NodeList* DS_List_NodeD_Create(void);
-int DS_List_NodeD_Destroy(IN OUT NodeList **ppList);
-int DS_List_NodeD_Insert(IN OUT NodeList *pList, IN const int nData, IN const ListDirection nDir, IN const fpCompData CompData);
-int DS_List_NodeD_Delete(IN OUT NodeList *pList, IN const int nData);
-int DS_List_NodeD_DeleteFromDir(IN OUT NodeList *pList, IN const ListDirection nDir, OUT int *pOutData);
-int DS_List_NodeD_PeekFromDir(IN const NodeList *pList, IN const ListDirection nDir, OUT int *pOutData);
-
-
-#pragma mark - List Common
-int DS_List_Node_IsEmpty(IN const NodeList *pList);
-void DS_List_Array_Show(IN const ArrayList *pList);
-void DS_List_Node_Show(IN const NodeList *pList);
-
+#pragma mark - List
+void* DS_List_Create(IN const unsigned int nMaxNumofData, IN const ListType nListType);
+int DS_List_Destroy(IN OUT void **ppListHndl);
+int DS_List_IsFull(IN const void *pListHndl);
+int DS_List_IsEmpty(const void *pListHndl);
+int DS_List_Insert(IN OUT void *pListHndl, IN const int nData, IN const ListDirection nDir, IN const fpCompData CompData);
+int DS_List_Delete(IN OUT void *pListHndl, IN const int nData);
+int DS_List_DeleteFromDir(IN OUT void *pListHndl, IN const ListDirection nDir, OUT int *pOutData);
+int DS_List_PeekFromDir(IN const void *pListHndl, IN const ListDirection nDir, OUT int *pOutData);
+void DS_List_ShowData(IN const void *pListHndl);
 
 #endif /* List_h */

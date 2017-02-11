@@ -13,43 +13,17 @@
 #include    "DataStruct_Node.h"
 #include    "DataStruct_List.h"
 
-typedef struct _ArrayQueue
+typedef struct _Queue
 {
-    ArrayList           *pList;
-}ArrayQueue;
+    List                *pList;
+}Queue;
 
 
-typedef struct _NodeQueue
-{
-    NodeList            *pList;
-}NodeQueue;
-
-
-#pragma mark - Array List Queue
-ArrayQueue* DS_Queue_Array_Create(IN const unsigned int nMaxQueueSize);
-int DS_Queue_Array_Destroy(IN OUT ArrayQueue **ppQueue);
-int DS_Queue_Array_Push(IN OUT ArrayQueue *pQueue, IN const int nData);
-int DS_Queue_Array_Pop(IN OUT ArrayQueue *pQueue, OUT int *pData);
-
-
-#pragma mark - Node List Priority Queue
-int DS_Queue_Priority_Array_Push(IN OUT ArrayQueue *pQueue, IN const int nData, IN const fpCompData CompData);
-
-
-#pragma mark - Node List Queue
-NodeQueue* DS_Queue_Node_Create(void);
-int DS_Queue_Node_Destroy(IN OUT NodeQueue **ppQueue);
-int DS_Queue_Node_Push(IN OUT NodeQueue *pQueue, IN const int nData);
-int DS_Queue_Node_Pop(IN OUT NodeQueue *pQueue, OUT int *pData);
-int DS_Queue_Node_Peek(IN const NodeQueue *pQueue, OUT int *pData);
-
-
-#pragma mark - Node List Priority Queue
-int DS_Queue_Priority_Node_Push(IN OUT NodeQueue *pQueue, IN const int nData, IN const fpCompData CompData);
-
-
-#pragma mark - Queue Common
-void DS_Queue_Array_Show(IN const ArrayQueue *pQueue);
-void DS_Queue_Node_Show(IN const NodeQueue *pQueue);
+void* DS_Queue_Create(IN const int nMaxQueueSize);
+int DS_Queue_Destroy(IN OUT void **ppQueueHndl);
+int DS_Queue_Push(IN OUT void *pQueueHndl, IN const int nData);
+int DS_Queue_Priority_Push(IN OUT Queue *pQueueHndl, IN const int nData, IN const fpCompData CompData);
+int DS_Queue_Pop(IN OUT void *pQueueHndl, OUT int *pData);
+void DS_Queue_ShowData(IN const void *pQueue);
 
 #endif /* Queue_h */

@@ -13,36 +13,18 @@
 #include    "DataStruct_Node.h"
 #include    "DataStruct_List.h"
 
-typedef struct _ArrayStack
+typedef struct _Stack
 {
-    ArrayList           *pList;
-}ArrayStack;
+    List                *pList;
+}Stack;
 
 
-typedef struct _NodeStack
-{
-    NodeList            *pList;
-}NodeStack;
-
-
-#pragma mark - Array List Stack
-ArrayStack* DS_Stack_Array_Create(IN const unsigned int nMaxStackSize);
-int DS_Stack_Array_Destroy(IN OUT ArrayStack **ppStack);
-int DS_Stack_Array_Push(IN OUT ArrayStack *pStack, IN const int nData);
-int DS_Stack_Array_Pop(IN OUT ArrayStack *pStack, OUT int *pData);
-
-
-#pragma mark - Node List Stack
-NodeStack* DS_Stack_Node_Create(void);
-int DS_Stack_Node_Destroy(IN OUT NodeStack **ppStack);
-int DS_Stack_Node_Push(IN OUT NodeStack *pStack, IN const int nData);
-int DS_Stack_Node_Pop(IN OUT NodeStack *pStack, OUT int *pData);
-int DS_Stack_Node_Peek(IN const NodeStack *pStack, OUT int *pData);
-
-
-#pragma mark - Stack Common
-void DS_Stack_Array_Show(IN const ArrayStack *pStack);
-void DS_Stack_Node_Show(IN const NodeStack *pStack);
+#pragma mark - Stack
+void* DS_Stack_Create(IN const int nMaxStackSize);
+int DS_Stack_Destroy(IN OUT void **ppStackHndl);
+int DS_Stack_Push(IN OUT void *pStackHndl, IN const int nData);
+int DS_Stack_Pop(IN OUT void *pStackHndl, OUT int *pData);
+void DS_Stack_ShowData(IN const void *pStack);
 
 
 #endif /* Stack_h */

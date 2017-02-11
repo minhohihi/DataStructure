@@ -31,9 +31,39 @@
 /*----------------------------------------------------------------------------------------
  Static Function
  ----------------------------------------------------------------------------------------*/
+// Array List Define
+static void* _DS_List_Array_Create(IN const unsigned int nMaxNumofData);
+static int _DS_List_Array_Destroy(IN OUT void **ppListCore);
+static int _DS_List_Array_IsFull(IN const void *pListCore);
+static int _DS_List_Array_IsEmpty(IN const void *pListCore);
+static int _DS_List_Array_Insert(IN OUT void *pListCore, IN const int nData, IN const ListDirection nDir, IN const fpCompData CompData);
+static int _DS_List_Array_Delete(IN OUT void *pListCore, IN const int nData);
+static int _DS_List_Array_DeleteFromDir(IN OUT void *pListCore, IN const ListDirection nDir, OUT int *pOutData);
+static int _DS_List_Array_PeekFromDir(IN const void *pListCore, IN const ListDirection nDir, OUT int *pOutData);
+
+// Node Single List Define
+static void* _DS_List_NodeS_Create(void);
+static int _DS_List_NodeS_Destroy(IN OUT void **ppListCore);
+static int _DS_List_NodeS_Insert(IN OUT void *pListCore, IN const int nData, IN const ListDirection nDir, IN const fpCompData CompData);
+static int _DS_List_NodeS_Delete(IN OUT void *pListCore, IN const int nData);
+static int _DS_List_NodeS_DeleteFromDir(IN OUT void *pListCore, IN const ListDirection nDir, OUT int *pOutData);
+static int _DS_List_NodeS_PeekFromDir(IN const void *pListCore, IN const ListDirection nDir, OUT int *pOutData);
+
+// Node Double List Define
+static void* _DS_List_NodeD_Create(void);
+static int _DS_List_NodeD_Destroy(IN OUT void **ppListCore);
+static int _DS_List_NodeD_Insert(IN OUT void *pListCore, IN const int nData, IN const ListDirection nDir, IN const fpCompData CompData);
+static int _DS_List_NodeD_Delete(IN OUT void *pListCore, IN const int nData);
+static int _DS_List_NodeD_DeleteFromDir(IN OUT void *pListCore, IN const ListDirection nDir, OUT int *pOutData);
+static int _DS_List_NodeD_PeekFromDir(IN const void *pListCore, IN const ListDirection nDir, OUT int *pOutData);
+
+
 static Node * _DS_List_Node_Create(IN const int nData);
 static void _DS_List_Node_Destroy(Node **ppNode);
-static Node* _DS_List_Node_FindData(IN const NodeList *pList, IN const int nData);
+static Node* _DS_List_Node_FindData(IN const NodeList *pListCore, IN const int nData);
+int _DS_List_Node_IsEmpty(IN const void *pListCore);
+void _DS_List_Array_Show(IN const void *pListCore);
+void _DS_List_Node_Show(IN const void *pListCore);
 
 
 /*----------------------------------------------------------------------------------------
@@ -49,47 +79,60 @@ static Node* _DS_List_Node_FindData(IN const NodeList *pList, IN const int nData
 /*----------------------------------------------------------------------------------------
  Function Implementation
  ----------------------------------------------------------------------------------------*/
-#pragma mark - ArrayList
-List* DS_List_Create(IN const unsigned int nMaxNumofData, IN const NodeType nNodeType)
+#pragma mark - List
+void* DS_List_Create(IN const unsigned int nMaxNumofData, IN const ListType nListType)
 {
-    List                *pTmpList = NULL;
+    List                *pTmpListHndl = NULL;
     
-    SAFEALLOC(pTmpList, 1, 32, List);
-    pTmpList->pAList = NULL;
-    pTmpList->pNList = NULL;
+    SAFEALLOC(pTmpListHndl, 1, 32, List);
+    pTmpListHndl->pListCore = NULL;
+    pTmpListHndl->nListType = nListType;
     
-    if(-1 == nMaxNumofData)
+    switch(pTmpListHndl->nListType)
     {
-        pTmpList->nNodeType = nNodeType;
-        
-        if(LIST_NODE_TYPE_SINGLE == nNodeType)
-            pTmpList->pNList = DS_List_NodeS_Create();
-        else if(LIST_NODE_TYPE_DOUBLE == nNodeType)
-            pTmpList->pNList = DS_List_NodeD_Create();
+        case LIST_TYPE_SINGLE:
+            pTmpListHndl->pListCore = _DS_List_NodeS_Create();
+            break;
+        case LIST_TYPE_DOUBLE:
+            pTmpListHndl->pListCore = _DS_List_NodeD_Create();
+            break;
+        case LIST_TYPE_ARRAY:
+            if(0 >= nMaxNumofData)
+                break;
+            
+            pTmpListHndl->pListCore = _DS_List_Array_Create(nMaxNumofData);
+            break;
+        default:
+            break;
     }
-    else
-        pTmpList->pAList = DS_List_Array_Create(nMaxNumofData);
     
-    if((NULL == pTmpList->pNList) && (NULL == pTmpList->pAList))
+    if(NULL == pTmpListHndl->pListCore)
         return NULL;
     
-    return pTmpList;
+    return (void *)pTmpListHndl;
 }
 
 
-int DS_List_Destroy(IN OUT List **ppList)
+int DS_List_Destroy(IN OUT void **ppListHndl)
 {
+    List                **ppList = (List **)ppListHndl;
+    
     if(NULL == (*ppList))
         return SUCCESS;
 
-    if(NULL != (*ppList)->pAList)
-        DS_List_Array_Destroy(&((*ppList)->pAList));
-    else if(NULL != (*ppList)->pNList)
+    switch((*ppList)->nListType)
     {
-        if(LIST_NODE_TYPE_SINGLE == (*ppList)->nNodeType)
-            DS_List_NodeS_Destroy(&((*ppList)->pNList));
-        else if(LIST_NODE_TYPE_DOUBLE == (*ppList)->nNodeType)
-            DS_List_NodeD_Destroy(&((*ppList)->pNList));
+        case LIST_TYPE_SINGLE:
+            _DS_List_NodeS_Destroy(&((*ppList)->pListCore));
+            break;
+        case LIST_TYPE_DOUBLE:
+            _DS_List_NodeD_Destroy(&((*ppList)->pListCore));
+            break;
+        case LIST_TYPE_ARRAY:
+            _DS_List_Array_Destroy(&((*ppList)->pListCore));
+            break;
+        default:
+            break;
     }
     
     SAFEFREE((*ppList));
@@ -98,92 +141,132 @@ int DS_List_Destroy(IN OUT List **ppList)
 }
 
 
-int DS_List_IsFull(IN const List *pList)
+int DS_List_IsFull(IN const void *pListHndl)
 {
-    if(NULL != pList->pAList)
-        return DS_List_Array_IsFull(pList->pAList);
-    else
-        return 0;
-}
-
-
-int DS_List_IsEmpty(const List *pList)
-{
-    if(NULL != pList->pAList)
-        return DS_List_Array_IsEmpty(pList->pAList);
-    else if(NULL != pList->pNList)
-        return DS_List_Node_IsEmpty(pList->pNList);
-    else
-        return 0;
-}
-
-
-int DS_List_Insert(IN OUT List *pList, IN const int nData, IN const ListDirection nDir, IN const fpCompData CompData)
-{
-    if(NULL != pList->pAList)
-        return DS_List_Array_Insert(pList->pAList, nData, nData, CompData);
-    else if(NULL != pList->pNList)
-    {
-        if(LIST_NODE_TYPE_SINGLE == pList->nNodeType)
-            return DS_List_NodeS_Insert(pList->pNList, nData, nData, CompData);
-        else if(LIST_NODE_TYPE_DOUBLE == pList->nNodeType)
-            return DS_List_NodeD_Insert(pList->pNList, nData, nData, CompData);
-    }
-
-    return FAIL;
-}
-
-
-int DS_List_Delete(IN OUT List *pList, IN const int nData)
-{
-    if(NULL != pList->pAList)
-        return DS_List_Array_Delete(pList->pAList, nData);
-    else if(NULL != pList->pNList)
-    {
-        if(LIST_NODE_TYPE_SINGLE == pList->nNodeType)
-            return DS_List_NodeS_Delete(pList->pNList, nData);
-        else if(LIST_NODE_TYPE_DOUBLE == pList->nNodeType)
-            return DS_List_NodeD_Delete(pList->pNList, nData);
-    }
-
-    return FAIL;
-}
-
-
-int DS_List_DeleteFromDir(IN OUT List *pList, IN const ListDirection nDir, OUT int *pOutData)
-{
-    if(NULL != pList->pAList)
-        return DS_List_Array_DeleteFromDir(pList->pAList, nDir, pOutData);
-    else if(NULL != pList->pNList)
-    {
-        if(LIST_NODE_TYPE_SINGLE == pList->nNodeType)
-            return DS_List_NodeS_DeleteFromDir(pList->pNList, nDir, pOutData);
-        else if(LIST_NODE_TYPE_DOUBLE == pList->nNodeType)
-            return DS_List_NodeD_DeleteFromDir(pList->pNList, nDir, pOutData);
-    }
+    List                *pList = (List *)pListHndl;
     
-    return FAIL;
-}
-
-
-int DS_List_PeekFromDir(IN const List *pList, IN const ListDirection nDir, OUT int *pOutData)
-{
-    if(NULL != pList->pAList)
-        return DS_List_Array_PeekFromDir(pList->pAList, nDir, pOutData);
-    else if(NULL != pList->pNList)
+    switch(pList->nListType)
     {
-        if(LIST_NODE_TYPE_SINGLE == pList->nNodeType)
-            return DS_List_NodeS_PeekFromDir(pList->pNList, nDir, pOutData);
-        else if(LIST_NODE_TYPE_DOUBLE == pList->nNodeType)
-            return DS_List_NodeD_PeekFromDir(pList->pNList, nDir, pOutData);
+        case LIST_TYPE_SINGLE:
+        case LIST_TYPE_DOUBLE:
+            return 0;
+        case LIST_TYPE_ARRAY:
+            return _DS_List_Array_IsFull(pList->pListCore);
+        default:
+            return 0;
     }
-    
-    return FAIL;
 }
+
+
+int DS_List_IsEmpty(IN const void *pListHndl)
+{
+    List                *pList = (List *)pListHndl;
+
+    switch(pList->nListType)
+    {
+        case LIST_TYPE_SINGLE:
+        case LIST_TYPE_DOUBLE:
+            return _DS_List_Node_IsEmpty(pList->pListCore);
+        case LIST_TYPE_ARRAY:
+            return _DS_List_Array_IsEmpty(pList->pListCore);
+        default:
+            return 0;
+    }
+}
+
+
+int DS_List_Insert(IN OUT void *pListHndl, IN const int nData, IN const ListDirection nDir, IN const fpCompData CompData)
+{
+    List                *pList = (List *)pListHndl;
+
+    switch(pList->nListType)
+    {
+        case LIST_TYPE_SINGLE:
+            return _DS_List_NodeS_Insert(pList->pListCore, nData, nDir, CompData);
+        case LIST_TYPE_DOUBLE:
+            return _DS_List_NodeD_Insert(pList->pListCore, nData, nDir, CompData);
+        case LIST_TYPE_ARRAY:
+            return _DS_List_Array_Insert(pList->pListCore, nData, nDir, CompData);
+        default:
+            return FAIL;
+    }
+}
+
+
+int DS_List_Delete(IN OUT void *pListHndl, IN const int nData)
+{
+    List                *pList = (List *)pListHndl;
+
+    switch(pList->nListType)
+    {
+        case LIST_TYPE_SINGLE:
+            return _DS_List_NodeS_Delete(pList->pListCore, nData);
+        case LIST_TYPE_DOUBLE:
+            return _DS_List_NodeD_Delete(pList->pListCore, nData);
+        case LIST_TYPE_ARRAY:
+            return _DS_List_Array_Delete(pList->pListCore, nData);
+        default:
+            return FAIL;
+    }
+}
+
+
+int DS_List_DeleteFromDir(IN OUT void *pListHndl, IN const ListDirection nDir, OUT int *pOutData)
+{
+    List                *pList = (List *)pListHndl;
+
+    switch(pList->nListType)
+    {
+        case LIST_TYPE_SINGLE:
+            return _DS_List_NodeS_DeleteFromDir(pList->pListCore, nDir, pOutData);
+        case LIST_TYPE_DOUBLE:
+            return _DS_List_NodeD_DeleteFromDir(pList->pListCore, nDir, pOutData);
+        case LIST_TYPE_ARRAY:
+            return _DS_List_Array_DeleteFromDir(pList->pListCore, nDir, pOutData);
+        default:
+            return FAIL;
+    }
+}
+
+
+int DS_List_PeekFromDir(IN const void *pListHndl, IN const ListDirection nDir, OUT int *pOutData)
+{
+    List                *pList = (List *)pListHndl;
+
+    switch(pList->nListType)
+    {
+        case LIST_TYPE_SINGLE:
+            return _DS_List_NodeS_PeekFromDir(pList->pListCore, nDir, pOutData);
+        case LIST_TYPE_DOUBLE:
+            return _DS_List_NodeD_PeekFromDir(pList->pListCore, nDir, pOutData);
+        case LIST_TYPE_ARRAY:
+            return _DS_List_Array_PeekFromDir(pList->pListCore, nDir, pOutData);
+        default:
+            return FAIL;
+    }
+}
+
+
+void DS_List_ShowData(IN const void *pListHndl)
+{
+    List                *pList = (List *)pListHndl;
+    
+    switch(pList->nListType)
+    {
+        case LIST_TYPE_SINGLE:
+        case LIST_TYPE_DOUBLE:
+            return _DS_List_Node_Show(pList->pListCore);
+        case LIST_TYPE_ARRAY:
+            return _DS_List_Array_Show(pList->pListCore);
+        default:
+            return;
+    }
+}
+
 
 
 #pragma mark - ArrayList
-ArrayList* DS_List_Array_Create(IN const unsigned int nMaxNumofData)
+static void* _DS_List_Array_Create(IN const unsigned int nMaxNumofData)
 {
     ArrayList           *pTmpList = NULL;
 
@@ -192,15 +275,16 @@ ArrayList* DS_List_Array_Create(IN const unsigned int nMaxNumofData)
     SAFEALLOC(pTmpList->pData, nMaxNumofData, 32, int);
     pTmpList->nCurrNumofData = 0;
     pTmpList->nMaxNumofData = nMaxNumofData;
-    pTmpList->nHeadIdx = 0;
     pTmpList->nTailIdx = -1;
     
-    return pTmpList;
+    return (ArrayList *)pTmpList;
 }
 
 
-int DS_List_Array_Destroy(IN OUT ArrayList **ppList)
+static int _DS_List_Array_Destroy(IN OUT void **ppListCore)
 {
+    ArrayList           **ppList = (ArrayList **)ppListCore;
+    
     if(NULL == (*ppList))
         return SUCCESS;
     else
@@ -213,8 +297,10 @@ int DS_List_Array_Destroy(IN OUT ArrayList **ppList)
 }
 
 
-int DS_List_Array_IsFull(IN const ArrayList *pList)
+static int _DS_List_Array_IsFull(IN const void *pListCore)
 {
+    const ArrayList     *pList = (ArrayList *)pListCore;
+    
     if(pList->nCurrNumofData == pList->nMaxNumofData)
         return 1;
     else
@@ -222,8 +308,10 @@ int DS_List_Array_IsFull(IN const ArrayList *pList)
 }
 
 
-int DS_List_Array_IsEmpty(const ArrayList *pList)
+static int _DS_List_Array_IsEmpty(const void *pListCore)
 {
+    const ArrayList     *pList = (ArrayList *)pListCore;
+    
     if(0 == pList->nCurrNumofData)
         return 1;
     else
@@ -231,9 +319,11 @@ int DS_List_Array_IsEmpty(const ArrayList *pList)
 }
 
 
-int DS_List_Array_Insert(IN OUT ArrayList *pList, IN const int nData, IN const ListDirection nDir, IN const fpCompData CompData)
+static int _DS_List_Array_Insert(IN OUT void *pListCore, IN const int nData, IN const ListDirection nDir, IN const fpCompData CompData)
 {
-    if(1 == DS_List_Array_IsFull((const ArrayList *)pList))
+    ArrayList           *pList = (ArrayList *)pListCore;
+    
+    if(1 == _DS_List_Array_IsFull((const ArrayList *)pList))
         return FAIL;
     
     pList->nTailIdx++;
@@ -269,12 +359,13 @@ int DS_List_Array_Insert(IN OUT ArrayList *pList, IN const int nData, IN const L
 }
 
 
-int DS_List_Array_Delete(IN OUT ArrayList *pList, IN const int nData)
+static int _DS_List_Array_Delete(IN OUT void *pListCore, IN const int nData)
 {
+    ArrayList               *pList = (ArrayList *)pListCore;
     unsigned int            i = 0;
     const int               *pData = pList->pData;
 
-    if(1 == DS_List_Array_IsEmpty((const ArrayList *)pList))
+    if(1 == _DS_List_Array_IsEmpty((const ArrayList *)pList))
         return SUCCESS;
     
     for(i=0 ; i<pList->nCurrNumofData ; i++)
@@ -291,9 +382,11 @@ int DS_List_Array_Delete(IN OUT ArrayList *pList, IN const int nData)
 }
 
 
-int DS_List_Array_DeleteFromDir(IN OUT ArrayList *pList, IN const ListDirection nDir, OUT int *pOutData)
+static int _DS_List_Array_DeleteFromDir(IN OUT void *pListCore, IN const ListDirection nDir, OUT int *pOutData)
 {
-    if(1 == DS_List_Array_IsEmpty((const ArrayList *)pList))
+    ArrayList               *pList = (ArrayList *)pListCore;
+    
+    if(1 == _DS_List_Array_IsEmpty((const ArrayList *)pList))
         return FAIL;
 
     if(LIST_DIR_INVALID <= nDir)
@@ -317,9 +410,11 @@ int DS_List_Array_DeleteFromDir(IN OUT ArrayList *pList, IN const ListDirection 
 }
 
 
-int DS_List_Array_PeekFromDir(IN const ArrayList *pList, IN const ListDirection nDir, OUT int *pOutData)
+static int _DS_List_Array_PeekFromDir(IN const void *pListCore, IN const ListDirection nDir, OUT int *pOutData)
 {
-    if(1 == DS_List_Array_IsEmpty((const ArrayList *)pList))
+    const ArrayList         *pList = (ArrayList *)pListCore;
+
+    if(1 == _DS_List_Array_IsEmpty(pList))
         return FAIL;
     
     if(LIST_DIR_INVALID <= nDir)
@@ -335,7 +430,7 @@ int DS_List_Array_PeekFromDir(IN const ArrayList *pList, IN const ListDirection 
 
 
 #pragma mark - Node Single List
-NodeList* DS_List_NodeS_Create(void)
+static void* _DS_List_NodeS_Create(void)
 {
     NodeList            *pTmpList = NULL;
     
@@ -354,9 +449,10 @@ NodeList* DS_List_NodeS_Create(void)
 }
 
 
-int DS_List_NodeS_Destroy(IN OUT NodeList **ppList)
+static int _DS_List_NodeS_Destroy(IN OUT void **ppListCore)
 {
     Node                    *pCurrNode = NULL;
+    NodeList                **ppList = (NodeList **)ppListCore;
     NodeList                *pList = *ppList;
     
     pCurrNode = pList->pHead;
@@ -377,9 +473,10 @@ int DS_List_NodeS_Destroy(IN OUT NodeList **ppList)
 }
 
 
-int DS_List_NodeS_Insert(IN OUT NodeList *pList, IN const int nData, IN const ListDirection nDir, IN const fpCompData CompData)
+static int _DS_List_NodeS_Insert(IN OUT void *pListCore, IN const int nData, IN const ListDirection nDir, IN const fpCompData CompData)
 {
     Node                    *pNewNode = NULL;
+    NodeList                *pList = (NodeList *)pListCore;
     
     // Alloc New Node
     if(NULL == (pNewNode = _DS_List_Node_Create(nData)))
@@ -435,13 +532,14 @@ int DS_List_NodeS_Insert(IN OUT NodeList *pList, IN const int nData, IN const Li
 }
 
 
-int DS_List_NodeS_Delete(IN OUT NodeList *pList, IN const int nData)
+static int _DS_List_NodeS_Delete(IN OUT void *pListCore, IN const int nData)
 {
     Node                    *pLocalNode = NULL;
     Node                    *pTmpNode = NULL;
+    NodeList                *pList = (NodeList *)pListCore;
     
     // Return If List is Empty
-    if(1 == DS_List_Node_IsEmpty((const NodeList *)pList))
+    if(1 == _DS_List_Node_IsEmpty((const NodeList *)pList))
         return SUCCESS;
     
     // Find Target Node
@@ -468,14 +566,15 @@ int DS_List_NodeS_Delete(IN OUT NodeList *pList, IN const int nData)
 }
 
 
-int DS_List_NodeS_DeleteFromDir(IN OUT NodeList *pList, IN const ListDirection nDir, OUT int *pOutData)
+static int _DS_List_NodeS_DeleteFromDir(IN OUT void *pListCore, IN const ListDirection nDir, OUT int *pOutData)
 {
-    Node                *pNode = NULL;
+    Node                    *pNode = NULL;
+    NodeList                *pList = (NodeList *)pListCore;
     
     if(LIST_DIR_INVALID <= nDir)
         return FAIL;
 
-    if(1 == DS_List_Node_IsEmpty((const NodeList *)pList))
+    if(1 == _DS_List_Node_IsEmpty((const NodeList *)pList))
         return FAIL;
     
     pList->nTotalNumofData--;
@@ -514,12 +613,14 @@ int DS_List_NodeS_DeleteFromDir(IN OUT NodeList *pList, IN const ListDirection n
 }
 
 
-int DS_List_NodeS_PeekFromDir(IN const NodeList *pList, IN const ListDirection nDir, OUT int *pOutData)
+static int _DS_List_NodeS_PeekFromDir(IN const void *pListCore, IN const ListDirection nDir, OUT int *pOutData)
 {
+    NodeList                *pList = (NodeList *)pListCore;
+    
     if(LIST_DIR_INVALID <= nDir)
         return FAIL;
     
-    if(1 == DS_List_Node_IsEmpty((const NodeList *)pList))
+    if(1 == _DS_List_Node_IsEmpty((const NodeList *)pList))
         return FAIL;
     
     if(LIST_DIR_HEAD == nDir)
@@ -532,9 +633,9 @@ int DS_List_NodeS_PeekFromDir(IN const NodeList *pList, IN const ListDirection n
 
 
 #pragma mark - Node Double List
-NodeList* DS_List_NodeD_Create(void)
+static void* _DS_List_NodeD_Create(void)
 {
-    NodeList            *pTmpList = NULL;
+    NodeList                *pTmpList = NULL;
     
     SAFEALLOC(pTmpList, 1, 32, NodeList);
     if(NULL == pTmpList)
@@ -551,9 +652,10 @@ NodeList* DS_List_NodeD_Create(void)
 }
 
 
-int DS_List_NodeD_Destroy(IN OUT NodeList **ppList)
+static int _DS_List_NodeD_Destroy(IN OUT void **ppListCore)
 {
     Node                    *pCurrNode = NULL;
+    NodeList                **ppList = (NodeList **)ppListCore;
     NodeList                *pList = *ppList;
     
     pCurrNode = pList->pHead;
@@ -574,9 +676,10 @@ int DS_List_NodeD_Destroy(IN OUT NodeList **ppList)
 }
 
 
-int DS_List_NodeD_Insert(IN OUT NodeList *pList, IN const int nData, IN const ListDirection nDir, IN const fpCompData CompData)
+static int _DS_List_NodeD_Insert(IN OUT void *pListCore, IN const int nData, IN const ListDirection nDir, IN const fpCompData CompData)
 {
     Node                    *pNewNode = NULL;
+    NodeList                *pList = (NodeList *)pListCore;
     
     // Alloc New Node
     if(NULL == (pNewNode = _DS_List_Node_Create(nData)))
@@ -639,13 +742,14 @@ int DS_List_NodeD_Insert(IN OUT NodeList *pList, IN const int nData, IN const Li
 }
 
 
-int DS_List_NodeD_Delete(IN OUT NodeList *pList, IN const int nData)
+static int _DS_List_NodeD_Delete(IN OUT void *pListCore, IN const int nData)
 {
     Node                    *pLocalNode = NULL;
     Node                    *pTmpNode = NULL;
+    NodeList                *pList = (NodeList *)pListCore;
     
     // Return If List is Empty
-    if(1 == DS_List_Node_IsEmpty((const NodeList *)pList))
+    if(1 == _DS_List_Node_IsEmpty((const NodeList *)pList))
         return SUCCESS;
     
     // Find Target Node
@@ -672,14 +776,15 @@ int DS_List_NodeD_Delete(IN OUT NodeList *pList, IN const int nData)
 }
 
 
-int DS_List_NodeD_DeleteFromDir(IN OUT NodeList *pList, IN const ListDirection nDir, OUT int *pOutData)
+static int _DS_List_NodeD_DeleteFromDir(IN OUT void *pListCore, IN const ListDirection nDir, OUT int *pOutData)
 {
     Node                *pNode = NULL;
+    NodeList                *pList = (NodeList *)pListCore;
     
     if(LIST_DIR_INVALID <= nDir)
         return FAIL;
     
-    if(1 == DS_List_Node_IsEmpty((const NodeList *)pList))
+    if(1 == _DS_List_Node_IsEmpty((const NodeList *)pList))
         return FAIL;
     
     pList->nTotalNumofData--;
@@ -714,12 +819,14 @@ int DS_List_NodeD_DeleteFromDir(IN OUT NodeList *pList, IN const ListDirection n
 }
 
 
-int DS_List_NodeD_PeekFromDir(IN const NodeList *pList, IN const ListDirection nDir, OUT int *pOutData)
+static int _DS_List_NodeD_PeekFromDir(IN const void *pListCore, IN const ListDirection nDir, OUT int *pOutData)
 {
+    NodeList                *pList = (NodeList *)pListCore;
+    
     if(LIST_DIR_INVALID <= nDir)
         return FAIL;
     
-    if(1 == DS_List_Node_IsEmpty((const NodeList *)pList))
+    if(1 == _DS_List_Node_IsEmpty((const NodeList *)pList))
         return FAIL;
 
     if(LIST_DIR_HEAD == nDir)
@@ -731,57 +838,6 @@ int DS_List_NodeD_PeekFromDir(IN const NodeList *pList, IN const ListDirection n
 }
 
 
-
-#pragma mark - List Common
-int DS_List_Node_IsEmpty(IN const NodeList *pList)
-{
-    if(0 == pList->nTotalNumofData)
-        return 1;
-    else
-        return 0;
-}
-
-
-void DS_List_Array_Show(IN const ArrayList *pList)
-{
-    int                     i = 0;
-    
-    if(1 == DS_List_Array_IsEmpty(pList))
-    {
-        printf("List is Empty\n");
-        return;
-    }
-    
-    for(i=0 ; i<pList->nCurrNumofData ; i++)
-        printf("%d ", pList->pData[i]);
-    
-    printf("\n");
-}
-
-
-void DS_List_Node_Show(IN const NodeList *pList)
-{
-    const Node              *pCurrNode = pList->pHead->pRNext;
-    
-    if(0 == pList->nTotalNumofData)
-    {
-        printf("List is Empty\n");
-        return;
-    }
-    
-    while(NULL != pCurrNode)
-    {
-        printf("%d ", pCurrNode->nData);
-        
-        pCurrNode = pCurrNode->pRNext;
-    }
-    
-    printf("\n");
-}
-
-
-
-#pragma mark - Static Function
 static Node * _DS_List_Node_Create(IN const int nData)
 {
     Node                    *pNewNode = NULL;
@@ -811,7 +867,7 @@ static Node* _DS_List_Node_FindData(IN const NodeList *pList, IN const int nData
     Node                    *pPrevNode = NULL;
     
     // Return If List is Empty
-    if(1 == DS_List_Node_IsEmpty((const NodeList *)pList))
+    if(1 == _DS_List_Node_IsEmpty((const NodeList *)pList))
         return NULL;
     
     pPrevNode = pList->pHead;
@@ -830,6 +886,55 @@ static Node* _DS_List_Node_FindData(IN const NodeList *pList, IN const int nData
 }
 
 
+int _DS_List_Node_IsEmpty(IN const void *pListCore)
+{
+    NodeList                *pList = (NodeList *)pListCore;
+    
+    if(0 == pList->nTotalNumofData)
+        return 1;
+    else
+        return 0;
+}
+
+
+void _DS_List_Array_Show(IN const void *pListCore)
+{
+    int                     i = 0;
+    ArrayList               *pList = (ArrayList *)pListCore;
+    
+    if(1 == _DS_List_Array_IsEmpty(pList))
+    {
+        printf("List is Empty\n");
+        return;
+    }
+    
+    for(i=0 ; i<pList->nCurrNumofData ; i++)
+        printf("%d ", pList->pData[i]);
+    
+    printf("\n");
+}
+
+
+void _DS_List_Node_Show(IN const void *pListCore)
+{
+    NodeList                *pList = (NodeList *)pListCore;
+    const Node              *pCurrNode = pList->pHead->pRNext;
+    
+    if(0 == pList->nTotalNumofData)
+    {
+        printf("List is Empty\n");
+        return;
+    }
+    
+    while(NULL != pCurrNode)
+    {
+        printf("%d ", pCurrNode->nData);
+        
+        pCurrNode = pCurrNode->pRNext;
+    }
+    
+    printf("\n");
+}
 
 
 

@@ -275,6 +275,7 @@ static void* _DS_List_Array_Create(IN const unsigned int nMaxNumofData)
     SAFEALLOC(pTmpList->pData, nMaxNumofData, 32, int);
     pTmpList->nCurrNumofData = 0;
     pTmpList->nMaxNumofData = nMaxNumofData;
+    pTmpList->nHeadIdx = 0;
     pTmpList->nTailIdx = -1;
     
     return (ArrayList *)pTmpList;
@@ -326,16 +327,22 @@ static int _DS_List_Array_Insert(IN OUT void *pListCore, IN const int nData, IN 
     if(1 == _DS_List_Array_IsFull((const ArrayList *)pList))
         return FAIL;
     
-    pList->nTailIdx++;
-
     if(NULL == CompData)
     {
         if(nDir == LIST_DIR_TAIL)
-            pList->pData[pList->nTailIdx] = nData;
+            pList->pData[++(pList->nTailIdx)] = nData;
         else if(nDir == LIST_DIR_HEAD)
         {
-            MEMCPY(&(pList->pData[1]), &(pList->pData[0]), pList->nCurrNumofData * sizeof(int));
-            pList->pData[0] = nData;
+            if(0 == pList->nHeadIdx)
+            {
+                pList->nTailIdx++;
+
+                MEMCPY(&(pList->pData[1]), &(pList->pData[0]), pList->nCurrNumofData * sizeof(int));
+                pList->pData[0] = nData;
+            }
+            else
+                pList->pData[pList->nHeadIdx--] = nData;
+                
         }
     }
     else
@@ -347,10 +354,19 @@ static int _DS_List_Array_Insert(IN OUT void *pListCore, IN const int nData, IN 
             if(0 > CompData(pData[i], nData))
                 break;
         
-        if((i != pList->nCurrNumofData) && (0 != (pList->nTailIdx - i)))
-            MEMCPY(&(pList->pData[i+1]), &(pList->pData[i]), (pList->nTailIdx - i) * sizeof(int));
+        if((i == pList->nHeadIdx) && (0 != pList->nHeadIdx))
+        {
+            pList->pData[--(pList->nHeadIdx)] = nData;
+        }
+        else
+        {
+            pList->nTailIdx++;
+            
+            if((i != pList->nCurrNumofData) && (0 != (pList->nTailIdx - i)))
+                MEMCPY(&(pList->pData[i+1]), &(pList->pData[i]), (pList->nTailIdx - i) * sizeof(int));
 
-        pList->pData[i] = nData;
+            pList->pData[i] = nData;
+        }
     }
     
     pList->nCurrNumofData++;
@@ -372,10 +388,18 @@ static int _DS_List_Array_Delete(IN OUT void *pListCore, IN const int nData)
         if(pData[i] == nData)
             break;
     
-    if((i != pList->nCurrNumofData) && (0 != (pList->nTailIdx - i)))
-        MEMCPY(&(pList->pData[i]), &(pList->pData[i + 1]), (pList->nTailIdx - i) * sizeof(int));
+    if(0 != i)
+    {
+        if((i != pList->nCurrNumofData) && (0 != (pList->nTailIdx - i)))
+            MEMCPY(&(pList->pData[i]), &(pList->pData[i + 1]), (pList->nTailIdx - i) * sizeof(int));
+        
+        pList->nTailIdx--;
+    }
+    else
+    {
+        pList->nHeadIdx++;
+    }
     
-    pList->nTailIdx--;
     pList->nCurrNumofData--;
     
     return SUCCESS;
@@ -395,16 +419,9 @@ static int _DS_List_Array_DeleteFromDir(IN OUT void *pListCore, IN const ListDir
     pList->nCurrNumofData--;
 
     if(LIST_DIR_HEAD == nDir)
-    {
-        *pOutData = pList->pData[0];
-        
-        if(0 != pList->nCurrNumofData)
-            MEMCPY(&(pList->pData[0]), &(pList->pData[1]), pList->nCurrNumofData * sizeof(int));
-    }
+        *pOutData = pList->pData[pList->nHeadIdx++];
     else if(LIST_DIR_TAIL == nDir)
-        *pOutData = pList->pData[pList->nTailIdx];
-
-    pList->nTailIdx--;
+        *pOutData = pList->pData[pList->nTailIdx--];
 
     return SUCCESS;
 }
@@ -908,7 +925,7 @@ void _DS_List_Array_Show(IN const void *pListCore)
         return;
     }
     
-    for(i=0 ; i<pList->nCurrNumofData ; i++)
+    for(i=pList->nHeadIdx ; i<=pList->nTailIdx ; i++)
         printf("%d ", pList->pData[i]);
     
     printf("\n");

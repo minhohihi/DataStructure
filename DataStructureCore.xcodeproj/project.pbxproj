@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		8B2F9CE61E575E3900D6624C /* DataStruct_Heap.c in Sources */ = {isa = PBXBuildFile; fileRef = 8B2F9CE41E575E3900D6624C /* DataStruct_Heap.c */; };
 		8B34F4F51E4DC01600B82287 /* DataStruct_Sort.c in Sources */ = {isa = PBXBuildFile; fileRef = 8B34F4F31E4DC01600B82287 /* DataStruct_Sort.c */; };
 		8BBB7D101E4C2DEF0006B1D3 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 8BBB7D0F1E4C2DEF0006B1D3 /* main.c */; };
 		8BBB7D181E4C2E200006B1D3 /* DataStruct_List.c in Sources */ = {isa = PBXBuildFile; fileRef = 8BBB7D161E4C2E200006B1D3 /* DataStruct_List.c */; };
@@ -30,6 +31,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		8B2F9CE41E575E3900D6624C /* DataStruct_Heap.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = DataStruct_Heap.c; sourceTree = "<group>"; };
+		8B2F9CE51E575E3900D6624C /* DataStruct_Heap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DataStruct_Heap.h; sourceTree = "<group>"; };
 		8B34F4F31E4DC01600B82287 /* DataStruct_Sort.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = DataStruct_Sort.c; sourceTree = "<group>"; };
 		8B34F4F41E4DC01600B82287 /* DataStruct_Sort.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DataStruct_Sort.h; sourceTree = "<group>"; };
 		8BBB7D0C1E4C2DEF0006B1D3 /* DataStructureCore */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = DataStructureCore; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -84,6 +87,8 @@
 				8BBB7D281E4C2EFD0006B1D3 /* DataStructCore.h */,
 				8BBB7D1F1E4C2E5A0006B1D3 /* DataStruct_Graph.c */,
 				8BBB7D201E4C2E5A0006B1D3 /* DataStruct_Graph.h */,
+				8B2F9CE41E575E3900D6624C /* DataStruct_Heap.c */,
+				8B2F9CE51E575E3900D6624C /* DataStruct_Heap.h */,
 				8BBB7D161E4C2E200006B1D3 /* DataStruct_List.c */,
 				8BBB7D171E4C2E200006B1D3 /* DataStruct_List.h */,
 				8BBB7D291E4C33E30006B1D3 /* DataStruct_Misc.h */,
@@ -161,6 +166,7 @@
 			files = (
 				8B34F4F51E4DC01600B82287 /* DataStruct_Sort.c in Sources */,
 				8BBB7D101E4C2DEF0006B1D3 /* main.c in Sources */,
+				8B2F9CE61E575E3900D6624C /* DataStruct_Heap.c in Sources */,
 				8BBB7D181E4C2E200006B1D3 /* DataStruct_List.c in Sources */,
 				8BBB7D1B1E4C2E2E0006B1D3 /* DataStruct_Node.c in Sources */,
 				8BBB7D241E4C2E670006B1D3 /* DataStruct_Queue.c in Sources */,

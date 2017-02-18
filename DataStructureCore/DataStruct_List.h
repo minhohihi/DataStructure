@@ -36,6 +36,7 @@ typedef struct _ArrayList
     int                 *pData;
     int                 nCurrNumofData;
     int                 nMaxNumofData;
+    int                 nHeadIdx;
     int                 nTailIdx;
 }ArrayList;
 

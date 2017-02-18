@@ -49,18 +49,18 @@
 #pragma mark - Stack
 void* DS_Stack_Create(IN const int nMaxStackSize)
 {
-    Stack               *pStack = NULL;
+    Stack               *pStackHndl = NULL;
     const ListType      nListType = (-1 == nMaxStackSize) ? LIST_TYPE_DOUBLE : LIST_TYPE_ARRAY;
     
-    SAFEALLOC(pStack, 1, 32, Stack);
-    if(NULL == pStack)
+    SAFEALLOC(pStackHndl, 1, 32, Stack);
+    if(NULL == pStackHndl)
         return NULL;
     
-    pStack->pList = DS_List_Create(nMaxStackSize, nListType);
-    if(NULL == pStack->pList)
+    pStackHndl->pList = DS_List_Create(nMaxStackSize, nListType);
+    if(NULL == pStackHndl->pList)
         return NULL;
     
-    return (void *)pStack;
+    return (void *)pStackHndl;
 }
 
 
@@ -82,9 +82,6 @@ int DS_Stack_Push(IN OUT void *pStackHndl, IN const int nData)
 {
     Stack               *pStack = (Stack *)pStackHndl;
     
-    if(1 == DS_List_IsFull((const List *)(pStack->pList)))
-        return FAIL;
-    
     if(FAIL == DS_List_Insert(pStack->pList, nData, LIST_DIR_TAIL, NULL))
         return FAIL;
     
@@ -96,9 +93,6 @@ int DS_Stack_Pop(IN OUT void *pStackHndl, OUT int *pData)
 {
     Stack               *pStack = (Stack *)pStackHndl;
     
-    if(1 == DS_List_IsEmpty((const List *)(pStack->pList)))
-        return FAIL;
-    
     if(FAIL == DS_List_DeleteFromDir(pStack->pList, LIST_DIR_TAIL, pData))
         return FAIL;
     
@@ -109,9 +103,6 @@ int DS_Stack_Pop(IN OUT void *pStackHndl, OUT int *pData)
 int DS_Stack_Peek(IN const void *pStackHndl, OUT int *pData)
 {
     Stack               *pStack = (Stack *)pStackHndl;
-    
-    if(1 == DS_List_IsEmpty((const List *)(pStack->pList)))
-        return FAIL;
     
     if(FAIL == DS_List_PeekFromDir(pStack->pList, LIST_DIR_TAIL, pData))
         return FAIL;

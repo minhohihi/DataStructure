@@ -13,6 +13,7 @@
 #include    "DataStruct_Misc.h"
 #include    "DataStruct_Node.h"
 #include    "DataStruct_Graph.h"
+#include    "DataStruct_Heap.h"
 #include    "DataStruct_List.h"
 #include    "DataStruct_Queue.h"
 #include    "DataStruct_Tree.h"

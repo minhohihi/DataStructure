@@ -331,6 +331,9 @@ static int _DS_BTree_FindMostBiggest(IN const BNode *pRNode, OUT BNode **ppPNode
     *ppPNode = (BNode *)pRNode;
     *ppTNode = (*ppPNode)->pLNode;
     
+    if(NULL == (*ppTNode))
+        return FAIL;
+
     while(NULL != (*ppTNode)->pRNode)
     {
         *ppPNode = *ppTNode;
@@ -338,10 +341,7 @@ static int _DS_BTree_FindMostBiggest(IN const BNode *pRNode, OUT BNode **ppPNode
         *ppTNode = (*ppTNode)->pRNode;
     }
     
-    if(NULL == (*ppTNode))
-        return FAIL;
-    else
-        return SUCCESS;
+    return SUCCESS;
 }
 
 
@@ -350,6 +350,9 @@ static int _DS_BTree_FindMostSmallest(IN const BNode *pRNode, OUT BNode **ppPNod
     *ppPNode = (BNode *)pRNode;
     *ppTNode = (*ppPNode)->pRNode;
     
+    if(NULL == (*ppTNode))
+        return FAIL;
+
     while(NULL != (*ppTNode)->pLNode)
     {
         *ppPNode = *ppTNode;
@@ -357,10 +360,7 @@ static int _DS_BTree_FindMostSmallest(IN const BNode *pRNode, OUT BNode **ppPNod
         *ppTNode = (*ppTNode)->pLNode;
     }
     
-    if(NULL == (*ppTNode))
-        return FAIL;
-    else
-        return SUCCESS;
+    return SUCCESS;
 }
 
 

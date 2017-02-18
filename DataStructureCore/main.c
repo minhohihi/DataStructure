@@ -16,9 +16,10 @@ static void _Test_DS_List(IN const int *pInputData);
 static void _Test_DS_Stack(IN const int *pInputData);
 static void _Test_DS_Queue(IN const int *pInputData);
 static void _Test_DS_Heap(IN const int *pInputData);
-static void _Test_DS_Sort(void);
+static void _Test_DS_Sort(IN const int *pInputData);
+static void _Test_DS_BTree(IN const int *pInputData);
 
-#define NUM_OF_DATA             (100000)
+#define NUM_OF_DATA             (1000)
 
 int nInputData[NUM_OF_DATA] = {10, 11, 14, 16, 7, 4, 2, 54, 24, 5, 3, 1, -1, -4, -5, 203, 102, 5, 45, 124, -45, -2345, -2312, };
 fpCompData pCompFunc = CompDataBigFirst;
@@ -33,15 +34,38 @@ int main(int argc, const char * argv[])
     _Test_DS_Queue((const int *)(&nInputData));
     
     _Test_DS_Heap((const int *)(&nInputData));
-
-    _Test_DS_Sort();
     
+    _Test_DS_Sort((const int *)(&nInputData));
+
+    _Test_DS_BTree((const int *)(&nInputData));
+
     return 0;
     
 }
 
 
-static void _Test_DS_Sort(void)
+static void _Test_DS_BTree(IN const int *pInputData)
+{
+    void                *pRootBTree = NULL;
+    int                 nData[NUM_OF_DATA] = {0, };
+    int                 i = 0;
+    
+    pRootBTree = DS_BTree_Create();
+    
+    memcpy(&(nData[0]), pInputData, NUM_OF_DATA * sizeof(int));
+    for(i=0 ; i<NUM_OF_DATA ; i++)
+        DS_BTree_Insert(pRootBTree, nData[i]);
+
+    DS_BTree_DoBalancing(pRootBTree);
+    
+    for(i=0 ; i<NUM_OF_DATA ; i++)
+        DS_BTree_Delete(pRootBTree, nData[i]);
+
+    DS_BTree_Destroy(&pRootBTree);
+}
+
+
+static void _Test_DS_Sort(IN const int *pInputData)
 {
     int                 nData[NUM_OF_DATA] = {0, };
     
@@ -49,7 +73,7 @@ static void _Test_DS_Sort(void)
     printf(" ******************************************* \n");
     printf("                 Bubble Sort                 \n");
     printf(" ******************************************* \n");
-    memcpy(&(nData[0]), &(nInputData[0]), NUM_OF_DATA * sizeof(int));
+    memcpy(&(nData[0]), pInputData, NUM_OF_DATA * sizeof(int));
     DS_Sort_BubbleSort(&(nData[0]), NUM_OF_DATA, pCompFunc);
     DS_Sort_ShowData(&(nData[NUM_OF_DATA-100]), 100);
 
@@ -58,7 +82,7 @@ static void _Test_DS_Sort(void)
     printf(" ******************************************* \n");
     printf("              Selection Sort                 \n");
     printf(" ******************************************* \n");
-    memcpy(&(nData[0]), &(nInputData[0]), NUM_OF_DATA * sizeof(int));
+    memcpy(&(nData[0]), pInputData, NUM_OF_DATA * sizeof(int));
     DS_Sort_SelectionSort(&(nData[0]), NUM_OF_DATA, pCompFunc);
     DS_Sort_ShowData(&(nData[NUM_OF_DATA-100]), 100);
 
@@ -67,7 +91,7 @@ static void _Test_DS_Sort(void)
     printf(" ******************************************* \n");
     printf("              Insertion Sort                 \n");
     printf(" ******************************************* \n");
-    memcpy(&(nData[0]), &(nInputData[0]), NUM_OF_DATA * sizeof(int));
+    memcpy(&(nData[0]), pInputData, NUM_OF_DATA * sizeof(int));
     DS_Sort_InsertionSort(&(nData[0]), NUM_OF_DATA, pCompFunc);
     DS_Sort_ShowData(&(nData[NUM_OF_DATA-100]), 100);
     
@@ -76,7 +100,7 @@ static void _Test_DS_Sort(void)
     printf(" ******************************************* \n");
     printf("                  Quick Sort                 \n");
     printf(" ******************************************* \n");
-    memcpy(&(nData[0]), &(nInputData[0]), NUM_OF_DATA * sizeof(int));
+    memcpy(&(nData[0]), pInputData, NUM_OF_DATA * sizeof(int));
     DS_Sort_QuickSort(&(nData[0]), NUM_OF_DATA, pCompFunc);
     DS_Sort_ShowData(&(nData[NUM_OF_DATA-100]), 100);
     
@@ -85,7 +109,7 @@ static void _Test_DS_Sort(void)
     //printf(" ******************************************* \n");
     //printf("                  Radix Sort                 \n");
     //printf(" ******************************************* \n");
-    //memcpy(&(nData[0]), &(nInputData[0]), NUM_OF_DATA * sizeof(int));
+    //memcpy(&(nData[0]), pInputData, NUM_OF_DATA * sizeof(int));
     //DS_Sort_RadixSort(&(nData[0]), NUM_OF_DATA, 3);
     //DS_Sort_ShowData(&(nData[0]), NUM_OF_DATA);
 }

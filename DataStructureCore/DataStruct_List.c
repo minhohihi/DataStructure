@@ -137,6 +137,8 @@ int DS_List_Destroy(IN OUT void **ppListHndl)
     
     SAFEFREE((*ppList));
     
+    *ppListHndl = NULL;
+    
     return SUCCESS;
 }
 

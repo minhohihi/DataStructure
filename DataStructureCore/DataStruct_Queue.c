@@ -75,6 +75,8 @@ int DS_Queue_Destroy(IN OUT void **ppQueueHndl)
     DS_List_Destroy((void **)(&((*ppQueue)->pList)));
     SAFEFREE((*ppQueue));
     
+    *ppQueueHndl = NULL;
+    
     return SUCCESS;
 }
 

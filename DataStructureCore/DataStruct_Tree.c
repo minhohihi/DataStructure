@@ -87,6 +87,8 @@ int DS_BTree_Destroy(IN OUT void **ppTreeHndl)
     SAFEFREE(pTree->pVRootNode);
     SAFEFREE(pTree);
     
+    *ppTreeHndl = NULL;
+    
     return SUCCESS;
 }
 
@@ -172,7 +174,7 @@ int DS_BTree_Delete(IN OUT void *pTreeHndl, IN const DATA nData)
                         BNode       *pTmpPNode = NULL;
                         BNode       *pTmpTNode = NULL;
                         
-                        _DS_BTree_FindMostSmallest(pTNode->pRNode, &pTmpPNode, &pTmpTNode);
+                        _DS_BTree_FindMostSmallest(pTNode, &pTmpPNode, &pTmpTNode);
                         
                         pTNode->nData = GET_DATA(pTmpTNode);
                         
@@ -289,10 +291,8 @@ static BNode* _DS_BTree_CreateBNode(IN const DATA nData)
 
 static int _DS_BTree_DestroyBNode(BNode **ppNode)
 {
-    BNode               *pBNode = *ppNode;
-    
-    SAFEFREE(pBNode);
-    if(NULL != pBNode)
+    SAFEFREE((*ppNode));
+    if(NULL != (*ppNode))
         return FAIL;
     
     return SUCCESS;
@@ -329,9 +329,9 @@ static int _DS_BTree_FindData(IN const BTree *pTree, IN const DATA nTagetData, O
 static int _DS_BTree_FindMostBiggest(IN const BNode *pRNode, OUT BNode **ppPNode, OUT BNode **ppTNode)
 {
     *ppPNode = (BNode *)pRNode;
-    *ppTNode = (*ppPNode)->pRNode;
+    *ppTNode = (*ppPNode)->pLNode;
     
-    while(NULL != *ppTNode)
+    while(NULL != (*ppTNode)->pRNode)
     {
         *ppPNode = *ppTNode;
         
@@ -348,9 +348,9 @@ static int _DS_BTree_FindMostBiggest(IN const BNode *pRNode, OUT BNode **ppPNode
 static int _DS_BTree_FindMostSmallest(IN const BNode *pRNode, OUT BNode **ppPNode, OUT BNode **ppTNode)
 {
     *ppPNode = (BNode *)pRNode;
-    *ppTNode = (*ppPNode)->pLNode;
+    *ppTNode = (*ppPNode)->pRNode;
     
-    while(NULL != *ppTNode)
+    while(NULL != (*ppTNode)->pLNode)
     {
         *ppPNode = *ppTNode;
         
@@ -369,6 +369,7 @@ static int _DS_BTree_TravelPreCore(IN const BNode *pPNode)
     if(NULL == pPNode)
         return SUCCESS;
     
+    printf(" %03d ", GET_DATA(pPNode));
     _DS_BTree_TravelPreCore(pPNode->pLNode);
     _DS_BTree_TravelPreCore(pPNode->pRNode);
     
@@ -381,8 +382,8 @@ static int _DS_BTree_TravelInCore(IN const BNode *pPNode)
     if(NULL == pPNode)
         return SUCCESS;
     
-    
     _DS_BTree_TravelInCore(pPNode->pLNode);
+    printf(" %03d ", GET_DATA(pPNode));
     _DS_BTree_TravelInCore(pPNode->pRNode);
     
     return SUCCESS;
@@ -394,9 +395,9 @@ static int _DS_BTree_TravelPostCore(IN const BNode *pPNode)
     if(NULL == pPNode)
         return SUCCESS;
     
-    
     _DS_BTree_TravelPostCore(pPNode->pLNode);
     _DS_BTree_TravelPostCore(pPNode->pRNode);
+    printf(" %03d ", GET_DATA(pPNode));
     
     return SUCCESS;
 }

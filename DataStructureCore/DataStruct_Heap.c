@@ -79,6 +79,8 @@ int DS_Heap_Destroy(IN OUT void **ppHeapHndl)
     SAFEFREE((*ppHeap)->pHeapData);
     SAFEFREE((*ppHeap));
     
+    *ppHeapHndl = NULL;
+    
     return SUCCESS;
 }
 

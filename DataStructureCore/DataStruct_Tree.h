@@ -38,5 +38,9 @@ int DS_BTree_Delete(IN OUT void *pTreeHndl, IN const DATA nData);
 int DS_BTree_Search(IN const void *pTreeHndl, IN const DATA nData);
 int DS_BTree_DoBalancing(IN OUT void *pTreeHndl);
 
+int DS_BTree_TravelPre(IN const void *pTreeHndl);
+int DS_BTree_TravelIn(IN const void *pTreeHndl);
+int DS_BTree_TravelPost(IN const void *pTreeHndl);
+
 
 #endif /* Tree_h */

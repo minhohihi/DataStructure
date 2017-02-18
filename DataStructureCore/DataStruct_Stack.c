@@ -74,6 +74,8 @@ int DS_Stack_Destroy(IN OUT void **ppStackHndl)
     DS_List_Destroy((void **)(&((*ppStack)->pList)));
     SAFEFREE((*ppStack));
     
+    *ppStackHndl = NULL;
+    
     return SUCCESS;
 }
 

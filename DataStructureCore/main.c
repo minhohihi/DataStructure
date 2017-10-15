@@ -355,7 +355,6 @@ static void _Test_DS_List(IN const int *pInputData)
     {
         int            i = 0;
         void           *pRootList = NULL;
-        int             nOutData = 0;
         
         printf("\n\n\n\n");
         printf(" ******************************************* \n");

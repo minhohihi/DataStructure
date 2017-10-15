@@ -66,8 +66,8 @@
 #endif
 
 
-#define MEMCPY(dst, src, length)                                    memcpy((dst), (src), (length))
-#define MEMSET(dst, var, length)                                    memset((dst), (var), (length))
+#define MEMCPY(dst, src, length)                                    memcpy((dst), (src), (size_t)(length))
+#define MEMSET(dst, var, length)                                    memset((dst), (var), (size_t)(length))
 
 
 #define MALLOC(size)                                                malloc(size)
